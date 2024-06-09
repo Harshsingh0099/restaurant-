@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Menu</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Restaurant Menu</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <h2>Menu Items</h2>
+                <ul class="list-group">
+                    {% for item in menu_items %}
+                        <li class="list-group-item">{{ item.item_name }} - ${{ item.price | round(2)}}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h2>Place Order</h2>
+                <form id="orderForm">
+                    <div class="form-group">
+                        <label for="customerName">Customer Name:</label>
+                        <input type="text" class="form-control" id="customerName" name="customerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tableNumber">Table Number:</label>
+                        <input type="number" class="form-control" id="tableNumber" name="tableNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderItems">Order Items:</label><br>
+                        <select class="form-control" id="orderItems" name="orderItems" multiple size="5">
+                            {% for item in menu_items %}
+                                <option value="{{ item.item_id }}">{{ item.item_name }} - ${{ item.price }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="submitOrder()">Place Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function submitOrder() {
+            var customerName = document.getElementById("customerName").value;
+            var tableNumber = document.getElementById("tableNumber").value;
+            var selectedItems = [];
+            var select = document.getElementById("orderItems");
+            for (var i = 0; i < select.options.length; i++) {
+                if (select.options[i].selected) {
+                    // Split the option text to extract item_id and price
+                    var optionTextParts = select.options[i].text.split(" - ");
+                    var itemId = optionTextParts[0];
+                    // Extract the price and parse it to a float
+                    var price = parseFloat(optionTextParts[1].replace("$", ""));
+                    selectedItems.push({ "item_id": itemId, "quantity": 1, "price": price });
+                }
+            }
+            var data = {
+                "customer_name": customerName,
+                "table_number": tableNumber,
+                "order_items": selectedItems
+            };
+    
+            fetch('/place_order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                }).catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+    
+</body>
+</html>
